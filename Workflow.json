@@ -1,0 +1,1219 @@
+{
+  "name": "cobranca",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 40
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2120,
+        -480
+      ],
+      "id": "ee5007c9-026d-47d5-bfd5-c583d7975911",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "response[\"30_vinculo_contrato\"]",
+              "field2": "contrato_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        960,
+        -460
+      ],
+      "id": "06a107bc-1534-4709-a38c-b8d093ac6976",
+      "name": "Merge1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        340,
+        -640
+      ],
+      "id": "9fcf06b4-3eeb-4266-b537-5f1d27500a05",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "url": "=https://your-erp-api.com/api/v1/tenants/{{ $json.vinculo_responsavel }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        -260
+      ],
+      "id": "2c8f9b6c-dcec-46eb-8245-f15b85aa86be",
+      "name": "Get Tenant Details"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/startTyping",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4960,
+        -1360
+      ],
+      "id": "8e50966e-55ae-481e-a885-fc3c60d0c66c",
+      "name": "Simulate Typing...",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4640,
+        -1360
+      ],
+      "id": "a5c3966b-8aa8-4fb8-99ed-3047d8c73f8a",
+      "name": "Wait",
+      "webhookId": "adf23500-d72c-49fb-83d0-f6f2589719a5"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5240,
+        -1360
+      ],
+      "id": "5e5737d4-e544-4c53-820e-ac4abf11a8b6",
+      "name": "Wait1",
+      "webhookId": "f2fc5323-77a0-41a2-b842-d4ac0e4335a3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4160,
+        -1380
+      ],
+      "id": "b7232136-ee0b-46c3-9982-a722b2e77428",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "57c830ca-4f2a-45ac-b8b7-c38b7f8fdb58",
+              "leftValue": "={{ $json.tipo }}",
+              "rightValue": "=Fatura taxa simples",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b5a187a9-8443-42e5-ad0c-216f64e5ddd7",
+              "leftValue": "={{ $json.status_pagamento }}",
+              "rightValue": "Vencida",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "817fba75-5e61-48d1-954c-9a0aa6064901",
+              "leftValue": "={{ $json.status_contrato }}",
+              "rightValue": "=Liberado",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2180,
+        -40
+      ],
+      "id": "16d4e56b-8080-49cf-b1f5-229d0e15c1ea",
+      "name": "IF: Contract is 'Liberado'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/startTyping",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4920,
+        -120
+      ],
+      "id": "54667680-80fc-425d-a9a1-0d4e6e132dcd",
+      "name": "Simulate Typing...1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4560,
+        -120
+      ],
+      "id": "3cb08663-a7e5-41ee-bc98-493c6a32bcd0",
+      "name": "Wait2",
+      "webhookId": "adf23500-d72c-49fb-83d0-f6f2589719a5"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5200,
+        -120
+      ],
+      "id": "b9d3f5a5-2576-4a23-8b4d-02441378a7b9",
+      "name": "Wait3",
+      "webhookId": "f2fc5323-77a0-41a2-b842-d4ac0e4335a3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4140,
+        -140
+      ],
+      "id": "9eee550c-d0fc-48e0-8b5c-35d94ab70c58",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ATENÇÃO: Substitua os nomes das chaves abaixo (ex: \"valor_juros\", \"response[\"02_nome_completo_responsavel\"]\") pelos nomes correspondentes do seu sistema.\n\nif (!items || items.length === 0) {\n  return [];\n}\n\nconst filteredItems = items.filter(item => {\n  const json = item.json;\n  return (\n    json &&\n    (typeof json.valor_juros === 'number' || typeof json.valor_juros === 'string') &&\n    json.response &&\n    json.response[\"02_nome_completo_responsavel\"]\n  );\n});\n\nif (filteredItems.length === 0) {\n  return [];\n}\n\nreturn filteredItems.map(item => {\n  const json = item.json;\n\n  let telefoneRaw = (json.response && json.response[\"16_telefone_fixo_celular_pf\"]) || \"\";\n\n  telefoneRaw = telefoneRaw.replace(/\\D/g, '');\n\n  if (telefoneRaw.length < 10) {\n    telefoneRaw = \"\";\n  }\n\n  const ddd = telefoneRaw.slice(0, 2);\n  let numero = telefoneRaw.slice(2);\n\n  if (numero.length === 9 && numero.startsWith('9')) {\n    numero = numero.slice(1);\n  }\n\n  let telefoneFormatado = \"sem telefone\";\n  if (ddd.length === 2 && numero.length === 8) {\n    telefoneFormatado = `55${ddd}${numero}`;\n  }\n\n  if (json.response) {\n    json.response[\"16_telefone_fixo_celular_pf\"] = telefoneFormatado;\n  }\n\n  const nome = (json.response && json.response[\"02_nome_completo_responsavel\"]) || \"Responsável\";\n\n  const valor = typeof json.valor_juros === 'number' \n    ? json.valor_juros.toFixed(2).replace('.', ',') \n    : \"0,00\";\n\n  const vencimento = json.data_vencimento\n    ? new Date(json.data_vencimento).toLocaleDateString('pt-BR')\n    : \"data inválida\";\n\n  // ATENÇÃO: Adapte a mensagem abaixo para a sua necessidade.\n  const mensagem = `Olá ${nome.trim()}, sou da equipe de relacionamento da [Sua Empresa] e gostaria de saber se tem algum retorno referente as sua taxa em aberto no valor de R$ ${valor} com vencimento em ${vencimento}. Caso não haja, seu contrato entrará em inicio de cancelamento, aguardo resposta.`;\n\n  json.mensagem_personalizada = mensagem;\n\n  return { json };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2920,
+        -1360
+      ],
+      "id": "e309cc83-f803-4e76-8818-ee3f3b88ba62",
+      "name": "Create Personalized Message",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ATENÇÃO: Substitua os nomes das chaves abaixo (ex: \"valor_juros\", \"response[\"02_nome_completo_responsavel\"]\") pelos nomes correspondentes do seu sistema.\n\nif (!items || items.length === 0) {\n  return [];\n}\n\nconst filteredItems = items.filter(item => {\n  const json = item.json;\n  return (\n    json &&\n    (typeof json.valor_juros === 'number' || typeof json.valor_juros === 'string') &&\n    json.response &&\n    json.response[\"02_nome_completo_responsavel\"]\n  );\n});\n\nif (filteredItems.length === 0) {\n  return [];\n}\n\nreturn filteredItems.map(item => {\n  const json = item.json;\n\n  let telefoneRaw = (json.response && json.response[\"16_telefone_fixo_celular_pf\"]) || \"\";\n\n  telefoneRaw = telefoneRaw.replace(/\\D/g, '');\n\n  if (telefoneRaw.length < 10) {\n    telefoneRaw = \"\";\n  }\n\n  const ddd = telefoneRaw.slice(0, 2);\n  let numero = telefoneRaw.slice(2);\n\n  if (numero.length === 9 && numero.startsWith('9')) {\n    numero = numero.slice(1);\n  }\n\n  let telefoneFormatado = \"sem telefone\";\n  if (ddd.length === 2 && numero.length === 8) {\n    telefoneFormatado = `55${ddd}${numero}`;\n  }\n\n  if (json.response) {\n    json.response[\"16_telefone_fixo_celular_pf\"] = telefoneFormatado;\n  }\n\n  const nome = (json.response && json.response[\"02_nome_completo_responsavel\"]) || \"Responsável\";\n\n  const valor = typeof json.valor_juros === 'number' \n    ? json.valor_juros.toFixed(2).replace('.', ',') \n    : \"0,00\";\n\n  const vencimento = json.data_vencimento\n    ? new Date(json.data_vencimento).toLocaleDateString('pt-BR')\n    : \"data inválida\";\n  \n  // ATENÇÃO: Adapte a mensagem abaixo para a sua necessidade.\n  const mensagem = `Olá ${nome.trim()}, sou da equipe de relacionamento da [Sua Empresa] e gostaria de saber se tem algum retorno referente as sua taxa em aberto no valor de R$ ${valor} com vencimento em ${vencimento}. Caso não haja, seu contrato entrará em inicio de cancelamento, aguardo resposta.`;\n\n  json.mensagem_personalizada = mensagem;\n\n  return { json };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        -100
+      ],
+      "id": "4c1e5f1f-25a6-4059-bad3-ea5571ffc39f",
+      "name": "Create Personalized Message 1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Wait2').item.json.mensagem_personalizada }}"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5580,
+        -120
+      ],
+      "id": "2729e8c7-3050-42b9-b2eb-4c3da920ec5d",
+      "name": "Send Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1a211f53-4266-4c9c-845b-2909f5828180",
+              "leftValue": "={{ $json.tipo }}",
+              "rightValue": "=Fatura taxa simples",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "787b7f91-cfbc-4840-aacf-2c659963f60c",
+              "leftValue": "={{ $json.status_pagamento }}",
+              "rightValue": "=Vencida",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "11334743-001b-4778-a073-55d475f548ed",
+              "leftValue": "={{ $json.status_contrato }}",
+              "rightValue": "=Contrato notificado",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2060,
+        -1300
+      ],
+      "id": "1e7a241d-bef8-41a1-be60-724e2a9681ed",
+      "name": "IF: Contract is 'Notificado'",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ATENÇÃO: Substitua os nomes das chaves abaixo (ex: \"response[\"02_nome_completo_responsavel\"]\") pelos nomes correspondentes do seu sistema.\n\nif (!items || items.length === 0) {\n  return [];\n}\n\nconst filteredItems = items.filter(item => {\n  const json = item.json;\n  return (\n    json &&\n    json.response &&\n    json.response[\"02_nome_completo_responsavel\"]\n  );\n});\n\nif (filteredItems.length === 0) {\n  return [];\n}\n\nreturn filteredItems.map(item => {\n  const json = item.json;\n\n  let telefoneRaw = (json.response && json.response[\"16_telefone_fixo_celular_pf\"]) || \"\";\n\n  telefoneRaw = telefoneRaw.replace(/\\D/g, '');\n\n  if (telefoneRaw.length < 10) {\n    telefoneRaw = \"\";\n  }\n\n  const ddd = telefoneRaw.slice(0, 2);\n  let numero = telefoneRaw.slice(2);\n\n  if (numero.length === 9 && numero.startsWith('9')) {\n    numero = numero.slice(1);\n  }\n\n  let telefoneFormatado = \"sem telefone\";\n  if (ddd.length === 2 && numero.length === 8) {\n    telefoneFormatado = `55${ddd}${numero}`;\n  }\n\n  if (json.response) {\n    json.response[\"16_telefone_fixo_celular_pf\"] = telefoneFormatado;\n  }\n\n  const nome = (json.response && json.response[\"02_nome_completo_responsavel\"]) || \"Responsável\";\n\n  const valor = typeof json.valor_juros === 'number' \n    ? json.valor_juros.toFixed(2).replace('.', ',') \n    : \"0,00\";\n\n  const vencimento = json.data_vencimento\n    ? new Date(json.data_vencimento).toLocaleDateString('pt-BR')\n    : \"data inválida\";\n\n  // ATENÇÃO: Adapte a mensagem abaixo para a sua necessidade.\n  const mensagem = `Olá ${nome.trim()}, tudo bem? Estou entrando em contato referente a suas taxas em aberto, precisamos fazer a regularização desses débitos pois seu contrato já está Cancelado, você permanece no imóvel?`;\n\n  json.mensagem_personalizada = mensagem;\n\n  return { json };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        1660
+      ],
+      "id": "624ac034-744c-42b2-90b1-5eb78f1c893a",
+      "name": "Create Personalized Message 2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/startTyping",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4980,
+        1540
+      ],
+      "id": "ce03846a-1afa-4e54-9058-6f76bd7ff952",
+      "name": "Simulate Typing...2",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4640,
+        1540
+      ],
+      "id": "d1a12267-cba6-4f4a-a1e8-0513c9cf961c",
+      "name": "Wait4",
+      "webhookId": "adf23500-d72c-49fb-83d0-f6f2589719a5"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5280,
+        1540
+      ],
+      "id": "3b988ea0-d2ca-4591-a740-01e0b69ec46d",
+      "name": "Wait5",
+      "webhookId": "f2fc5323-77a0-41a2-b842-d4ac0e4335a3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4220,
+        1520
+      ],
+      "id": "090f4c28-c3da-4967-a871-5335ae30800d",
+      "name": "Loop Over Items4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $('Wait4').item.json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Wait4').item.json.mensagem_personalizada }}"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5600,
+        1540
+      ],
+      "id": "98ff3968-9775-4281-9888-d41567301b0b",
+      "name": "Send Message 1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2b6808fa-70a2-497b-ac0c-8512007fcee4",
+              "leftValue": "={{ $json.status_pagamento }}",
+              "rightValue": "=Vencida",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a2aa8c2a-5765-4a8a-9c60-a4108a0c6683",
+              "leftValue": "={{ $json.status_contrato }}",
+              "rightValue": "=Em cancelamento",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "afca748e-3323-47be-95dd-3b7c4883433d",
+              "leftValue": "={{ $json.tipo }}",
+              "rightValue": "Fatura taxa simples",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        1660
+      ],
+      "id": "51159adf-22a4-47d2-ad75-58446aa4a826",
+      "name": "IF: Contract is 'Em Cancelamento'"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4380,
+        -1480
+      ],
+      "id": "14b515fd-64b0-4ba9-a673-4ccf609f9e02",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4360,
+        -300
+      ],
+      "id": "2564d87e-42f2-42b2-be6d-160929feb762",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        1300
+      ],
+      "id": "5d9aa0b2-1ded-4914-a005-d96f9e236b77",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-whatsapp-gateway.com/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $json.telefone_responsavel }}@c.us"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Wait1').item.json.mensagem_personalizada }}"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5580,
+        -1360
+      ],
+      "id": "6cc4d2cb-d238-48e5-a27f-35554191be41",
+      "name": "Send Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "const hoje = new Date();\nconst ontem = new Date(hoje);\nontem.setDate(hoje.getDate() - 1);\n\nconst data_inicio_ontem = new Date(Date.UTC(ontem.getFullYear(), ontem.getMonth(), ontem.getDate(), 0, 0, 0));\nconst data_fim_ontem = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 0, 0, 0));\n\nreturn [\n  {\n    json: {\n      data_inicio_ontem: data_inicio_ontem.toISOString(),\n      data_fim_ontem: data_fim_ontem.toISOString(),\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1860,
+        -460
+      ],
+      "id": "2ca8f06f-5382-4213-8fd7-631f123a0c66",
+      "name": "Get Yesterday's Date Range"
+    },
+    {
+      "parameters": {
+        "url": "=https://your-erp-api.com/api/v1/invoices",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "constraints",
+              "value": "=[\n  {\n    \"key\": \"08_fatura_status_pagamento\",\n    \"constraint_type\": \"equals\",\n    \"value\": \"Vencida\"\n  },\n  {\n    \"key\": \"07_fatura_data_vencimento\",\n    \"constraint_type\": \"greater than\",\n    \"value\": \"{{ $json.data_inicio_ontem }}\"\n  },\n  {\n    \"key\": \"07_fatura_data_vencimento\",\n    \"constraint_type\": \"less than\",\n    \"value\": \"{{ $json.data_fim_ontem }}\"\n  }\n]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1640,
+        -460
+      ],
+      "id": "375e36c1-cc1d-42f5-94bf-4b9d5487ded5",
+      "name": "Get Overdue Invoices"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ATENÇÃO: Substitua os nomes das chaves abaixo (ex: \"09_fatura_tipo\") pelos nomes correspondentes do seu sistema.\n\nconst todasFaturas = items.flatMap(item => item.json.response.results);\n\nreturn todasFaturas.map(fatura => {\n  return {\n    json: {\n      id: fatura._id,\n      tipo: fatura[\"09_fatura_tipo\"],\n      valor_original: fatura[\"01_fatura_valor_original\"],\n      status_pagamento: fatura[\"08_fatura_status_pagamento\"],\n      contrato_id: fatura[\"10_fatura_vinculo_contrato\"],\n      data_vencimento: fatura[\"07_fatura_data_vencimento\"],\n      descricao: fatura[\"06_fatura_descricao\"],\n      valor_juros: fatura[\"04_fatura_valor_total_com_juros\"],\n      data_pagamento: fatura[\"20_pagamento_data\"],\n      valor_pago: fatura[\"22_pagamento_valor_pago\"],\n      anuidade: fatura[\"98_anuidade_da_fatura\"],\n      primeira_fatura: fatura[\"REV_01_primeira_fatura\"],\n      fatura_ativa: fatura[\"REV_02_fatura_ativa\"],\n      contrato_ativo: fatura[\"96_contrato_ativo\"],\n      regra_comissao: fatura[\"legacy_regra_comissao\"],\n      comissao_embutida: fatura[\"99_comissao_embutida\"],\n      criado_em: fatura[\"Created Date\"],\n      modificado_em: fatura[\"Modified Date\"],\n      criado_por: fatura[\"Created By\"]\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1340,
+        -460
+      ],
+      "id": "156aec0a-9109-4c98-913e-e676192b9388",
+      "name": "Format Invoice Data"
+    },
+    {
+      "parameters": {
+        "url": "=https://your-erp-api.com/api/v1/contracts/{{ $json.contrato_id }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -740,
+        -240
+      ],
+      "id": "149cbe17-2d3c-4dd1-a8d5-ba09ec95e03f",
+      "name": "Get Contract Details",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ATENÇÃO: Substitua os nomes das chaves abaixo (ex: \"01_status_contrato\") pelos nomes correspondentes do seu sistema.\n\nreturn items.map(item => {\n  const fatura = item.json;\n  const contrato = fatura.response || {}; \n\n  return {\n    json: {\n      id_fatura: fatura.id,\n      valor_juros: fatura.valor_juros,\n      data_vencimento: fatura.data_vencimento,\n      contrato_id: fatura.contrato_id,\n      descrição: fatura.descricao,\n      tipo: fatura.tipo,\n      status_pagamento: fatura.status_pagamento,\n      \n      status_contrato: contrato[\"01_status_contrato\"] || null,\n      vinculo_responsavel: contrato[\"10_vinculo_responsavel\"] || null,\n      nome_responsavel: contrato[\"02_dados_nome_responsavel\"] || null,\n      parceiro: contrato[\"04_dados_nome_parceiro\"] || null,\n      inicio_cancelamento:contrato[\"40_inicio_cancelamento\"]|| null  \n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        -460
+      ],
+      "id": "78031d12-6d52-49a3-b722-85ac7eadd725",
+      "name": "Format Invoice and Contract Data"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -980,
+        -600
+      ],
+      "id": "7035fe6b-5603-4716-859b-1938fa51ba60",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "response._id",
+              "field2": "contrato_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        -460
+      ],
+      "id": "6876e4e0-5a9c-4537-9e8d-4524326c63c6",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "085a7a54-e061-4617-a474-a8d14f50771e",
+              "name": "id_fatura",
+              "value": "={{ $json.id_fatura }}",
+              "type": "string"
+            },
+            {
+              "id": "7891c2a9-fb26-4b21-98e2-984c9d4ff61a",
+              "name": "descrição",
+              "value": "={{ $json[\"descrição\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "48ae6f12-91c6-4d73-9c46-83b725e85420",
+              "name": "status_pagamento",
+              "value": "={{ $json.status_pagamento }}",
+              "type": "string"
+            },
+            {
+              "id": "2061a90c-7a9b-4bf8-a04b-5a8d2b32ea33",
+              "name": "valor_juros",
+              "value": "={{ $json.valor_juros }}",
+              "type": "number"
+            },
+            {
+              "id": "f8e0bba9-25cc-40bc-90a4-1dbffdc54e4d",
+              "name": "data_vencimento",
+              "value": "={{ $json.data_vencimento }}",
+              "type": "string"
+            },
+            {
+              "id": "21dfe93d-b9d6-49e1-96a3-3256b069b417",
+              "name": "contrato_id",
+              "value": "={{ $json.contrato_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d2b4a3f7-8688-4db3-bdfe-9cb16ab2f993",
+              "name": "tipo",
+              "value": "={{ $json.tipo }}",
+              "type": "string"
+            },
+            {
+              "id": "596118e8-ccff-41e5-ad26-f989a890d0ea",
+              "name": "status_contrato",
+              "value": "={{ $json.status_contrato }}",
+              "type": "string"
+            },
+            {
+              "id": "240558f9-fe53-4f1e-9913-6c4b11578d92"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        -460
+      ],
+      "id": "73c683c3-37eb-4b5c-a25e-0498305f2420",
+      "name": "Organize Final Data"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "id": "2ca8f06f-5382-4213-8fd7-631f123a0c66",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "id": "73c683c3-37eb-4b5c-a25e-0498305f2420",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "id": "2c8f9b6c-dcec-46eb-8245-f15b85aa86be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "id": "9fcf06b4-3eeb-4266-b537-5f1d27500a05",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "id": "8e50966e-55ae-481e-a885-fc3c60d0c66c",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "id": "6cc4d2cb-d238-48e5-a27f-35554191be41",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "id": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Contract is 'Liberado'": {
+      "main": [
+        [
+          {
+            "id": "4c1e5f1f-25a6-4059-bad3-ea5571ffc39f",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "id": "2564d87e-42f2-42b2-be6d-160929feb762",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "id": "54667680-80fc-425d-a9a1-0d4e6e132dcd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "id": "2729e8c7-3050-42b9-b2eb-4c3da920ec5d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "id": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Personalized Message": {
+      "main": [
+        [
+          {
+            "id": "b7232136-ee0b-46c3-9982-a722b2e77428",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Personalized Message 1": {
+      "main": [
+        [
+          {
+            "id": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Contract is 'Notificado'": {
+      "main": [
+        [
+          {
+            "id": "e309cc83-f803-4e76-8818-ee3f3b88ba62",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "id": "14b515fd-64b0-4ba9-a673-4ccf609f9e02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Personalized Message 2": {
+      "main": [
+        [
+          {
+            "id": "090f4c28-c3da-4967-a871-5335ae30800d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "id": "ce03846a-1afa-4e54-9058-6f76bd7ff952",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "id": "98ff3968-9775-4281-9888-d41567301b0b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "id": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Contract is 'Em Cancelamento'": {
+      "main": [
+        [
+          {
+            "id": "624ac034-744c-42b2-90b1-5eb78f1c893a",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "id": "5d9aa0b2-1ded-4914-a005-d96f9e236b77",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Typing...": {
+      "main": [
+        [
+          {
+            "id": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Typing...1": {
+      "main": [
+        [
+          {
+            "id": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Typing...2": {
+      "main": [
+        [
+          {
+            "id": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Yesterday's Date Range": {
+      "main": [
+        [
+          {
+            "id": "375e36c1-cc1d-42f5-94bf-4b9d5487ded5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Overdue Invoices": {
+      "main": [
+        [
+          {
+            "id": "156aec0a-9109-4c98-913e-e676192b9388",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Invoice Data": {
+      "main": [
+        [
+          {
+            "id": "7035fe6b-5603-4716-859b-1938fa51ba60",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contract Details": {
+      "main": [
+        [
+          {
+            "id": "7035fe6b-5603-4716-859b-1938fa51ba60",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Invoice and Contract Data": {
+      "main": [
+        [
+          {
+            "id": "9fcf06b4-3eeb-4266-b537-5f1d27500a05",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "id": "Get Contract Details",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "id": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "id": "Format Invoice and Contract Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organize Final Data": {
+      "main": [
+        [
+          {
+            "id": "IF: Contract is 'Notificado'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "id": "IF: Contract is 'Liberado'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "id": "IF: Contract is 'Em Cancelamento'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
